@@ -6,10 +6,10 @@ import os
 
 
 # ============================================================
-# PRESET
+# PRESETS
 # ============================================================
 
-PRESET = {
+PRESETS = {
     "4K — 3840 × 2160": (3840, 2160),
     "1440p — 2560 × 1440": (2560, 1440),
     "Full HD — 1920 × 1080": (1920, 1080),
@@ -21,73 +21,73 @@ PRESET = {
 
 
 # ============================================================
-# VARIABILI
+# VARIABLES
 # ============================================================
 
-immagine = None
-percorso_immagine = None
+image = None
+image_path = None
 preview_image = None
 
-aggiornamento_dimensioni = False
+updating_dimensions = False
 
 
 # ============================================================
-# FINESTRA
+# WINDOW
 # ============================================================
 
-finestra = tk.Tk()
+window = tk.Tk()
 
-finestra.title("ImageResizer")
+window.title("ImageResizer")
 
-# Dimensione iniziale
-finestra.geometry("900x800")
+# Initial size
+window.geometry("900x800")
 
-# ORA LA FINESTRA È RIDIMENSIONABILE
-finestra.resizable(True, True)
+# Make the window resizable
+window.resizable(True, True)
 
-# Dimensione minima
-finestra.minsize(750, 650)
+# Minimum size
+window.minsize(750, 650)
 
 
 # ============================================================
-# VARIABILI TKINTER
+# TKINTER VARIABLES
 # ============================================================
 
-modalita = tk.StringVar(
-    master=finestra,
+resize_mode = tk.StringVar(
+    master=window,
     value="Pixel"
 )
 
-preset_selezionato = tk.StringVar(
-    master=finestra,
+selected_preset = tk.StringVar(
+    master=window,
     value="Full HD — 1920 × 1080"
 )
 
-larghezza_var = tk.StringVar(
-    master=finestra
+width_var = tk.StringVar(
+    master=window
 )
 
-altezza_var = tk.StringVar(
-    master=finestra
+height_var = tk.StringVar(
+    master=window
 )
 
-percentuale_var = tk.StringVar(
-    master=finestra,
+percentage_var = tk.StringVar(
+    master=window,
     value="50"
 )
 
-direzione_var = tk.StringVar(
-    master=finestra,
-    value="Più piccola"
+direction_var = tk.StringVar(
+    master=window,
+    value="Smaller"
 )
 
-mantieni_proporzioni = tk.BooleanVar(
-    master=finestra,
+keep_aspect_ratio = tk.BooleanVar(
+    master=window,
     value=True
 )
 
-formato_var = tk.StringVar(
-    master=finestra,
+format_var = tk.StringVar(
+    master=window,
     value="PNG"
 )
 
@@ -96,82 +96,82 @@ formato_var = tk.StringVar(
 # PREVIEW
 # ============================================================
 
-def aggiorna_preview():
+def update_preview():
 
     global preview_image
 
-    if immagine is None:
+    if image is None:
 
         preview_label.config(
             image="",
-            text="Nessuna immagine"
+            text="No image"
         )
 
         return
 
     try:
 
-        anteprima = immagine.copy()
+        preview = image.copy()
 
-        # Dimensione attuale dell'area preview
-        larghezza_area = max(
+        # Current preview area size
+        preview_width = max(
             preview_area.winfo_width() - 20,
             200
         )
 
-        altezza_area = max(
+        preview_height = max(
             preview_area.winfo_height() - 20,
             150
         )
 
-        larghezza_originale, altezza_originale = (
-            anteprima.size
+        original_width, original_height = (
+            preview.size
         )
 
-        # Calcolo del rapporto di riduzione
-        fattore_larghezza = (
-            larghezza_area / larghezza_originale
+        # Calculate the scaling factor
+        width_factor = (
+            preview_width / original_width
         )
 
-        fattore_altezza = (
-            altezza_area / altezza_originale
+        height_factor = (
+            preview_height / original_height
         )
 
-        fattore = min(
-            fattore_larghezza,
-            fattore_altezza
+        factor = min(
+            width_factor,
+            height_factor
         )
 
-        # Non ingrandire immagini già piccole
-        fattore = min(
-            fattore,
+        # Do not enlarge already small images
+        factor = min(
+            factor,
             1
         )
 
-        nuova_larghezza = max(
+        new_width = max(
             1,
             round(
-                larghezza_originale * fattore
+                original_width * factor
             )
         )
 
-        nuova_altezza = max(
+        new_height = max(
             1,
             round(
-                altezza_originale * fattore
+                original_height * factor
             )
         )
 
-        anteprima = anteprima.resize(
+        preview = preview.resize(
             (
-                nuova_larghezza,
-                nuova_altezza
+                new_width,
+                new_height
             ),
             Image.Resampling.LANCZOS
         )
 
         preview_image = ImageTk.PhotoImage(
-            anteprima
+            preview
         )
 
         preview_label.config(
@@ -179,486 +179,485 @@ def aggiorna_preview():
             text=""
         )
 
-    except Exception as errore:
+    except Exception as error:
 
         preview_label.config(
             image="",
-            text=f"Errore preview: {errore}"
+            text=f"Preview error: {error}"
         )
 
 
 # ============================================================
-# QUANDO CAMBIA LA DIMENSIONE DELLA FINESTRA
+# WHEN THE WINDOW IS RESIZED
 # ============================================================
 
 def preview_resize(event=None):
 
-    if immagine is not None:
-        aggiorna_preview()
+    if image is not None:
+        update_preview()
 
 
 # ============================================================
-# SELEZIONA IMMAGINE
+# SELECT IMAGE
 # ============================================================
 
-def scegli_immagine():
+def select_image():
 
-    global immagine
-    global percorso_immagine
+    global image
+    global image_path
 
-    percorso = filedialog.askopenfilename(
-        title="Seleziona un'immagine",
+    path = filedialog.askopenfilename(
+        title="Select an image",
         filetypes=[
             (
-                "Immagini",
+                "Images",
                 "*.png *.jpg *.jpeg *.webp *.bmp"
             ),
             (
-                "Tutti i file",
+                "All files",
                 "*.*"
             )
         ]
     )
 
-    if not percorso:
+    if not path:
         return
 
     try:
 
-        nuova_immagine = Image.open(
-            percorso
+        new_image = Image.open(
+            path
         )
 
-        nuova_immagine.load()
+        new_image.load()
 
-        immagine = nuova_immagine
-        percorso_immagine = percorso
+        image = new_image
+        image_path = path
 
-        nome = os.path.basename(
-            percorso
+        name = os.path.basename(
+            path
         )
 
-        larghezza, altezza = (
-            immagine.size
+        width, height = (
+            image.size
         )
 
-        nome_label.config(
-            text=f"Immagine: {nome}"
+        name_label.config(
+            text=f"Image: {name}"
         )
 
-        dimensioni_label.config(
+        dimensions_label.config(
             text=(
-                f"Dimensioni originali: "
-                f"{larghezza} × {altezza} px"
+                f"Original dimensions: "
+                f"{width} × {height} px"
             )
         )
 
-        # Partiamo dalle dimensioni originali
-        larghezza_var.set(
-            str(larghezza)
+        # Start with the original dimensions
+        width_var.set(
+            str(width)
         )
 
-        altezza_var.set(
-            str(altezza)
+        height_var.set(
+            str(height)
         )
 
-        aggiorna_preview()
-        aggiorna_preview_testuale()
+        update_preview()
+        update_text_preview()
 
-    except Exception as errore:
+    except Exception as error:
 
         messagebox.showerror(
-            "Errore",
+            "Error",
             (
-                "Non è stato possibile aprire "
-                "l'immagine.\n\n"
-                f"{errore}"
+                "The image could not be opened.\n\n"
+                f"{error}"
             )
         )
 
 
 # ============================================================
-# CAMBIA MODALITÀ
+# CHANGE RESIZE MODE
 # ============================================================
 
-def cambia_modalita(event=None):
+def change_resize_mode(event=None):
 
-    if modalita.get() == "Pixel":
+    if resize_mode.get() == "Pixel":
 
-        frame_pixel.pack(
+        pixel_frame.pack(
             fill="x",
             padx=35,
             pady=8
         )
 
-        frame_percentuale.pack_forget()
+        percentage_frame.pack_forget()
 
     else:
 
-        frame_pixel.pack_forget()
+        pixel_frame.pack_forget()
 
-        frame_percentuale.pack(
+        percentage_frame.pack(
             fill="x",
             padx=35,
             pady=8
         )
 
-    aggiorna_preview_testuale()
+    update_text_preview()
 
 
 # ============================================================
-# PRESET
+# PRESETS
 # ============================================================
 
-def preset_cambiato(event=None):
+def preset_changed(event=None):
 
-    if preset_selezionato.get() not in PRESET:
+    if selected_preset.get() not in PRESETS:
         return
 
-    larghezza, altezza = PRESET[
-        preset_selezionato.get()
+    width, height = PRESETS[
+        selected_preset.get()
     ]
 
-    larghezza_var.set(
-        str(larghezza)
+    width_var.set(
+        str(width)
     )
 
-    altezza_var.set(
-        str(altezza)
+    height_var.set(
+        str(height)
     )
 
-    aggiorna_preview_testuale()
+    update_text_preview()
 
 
 # ============================================================
-# MODIFICA LARGHEZZA
+# MODIFY WIDTH
 # ============================================================
 
-def modifica_larghezza(event=None):
+def modify_width(event=None):
 
-    global aggiornamento_dimensioni
+    global updating_dimensions
 
-    if aggiornamento_dimensioni:
+    if updating_dimensions:
         return
 
-    if not mantieni_proporzioni.get():
-        aggiorna_preview_testuale()
+    if not keep_aspect_ratio.get():
+        update_text_preview()
         return
 
-    if immagine is None:
+    if image is None:
         return
 
     try:
 
-        nuova_larghezza = int(
-            larghezza_var.get()
+        new_width = int(
+            width_var.get()
         )
 
-        if nuova_larghezza <= 0:
+        if new_width <= 0:
             return
 
-        larghezza_originale, altezza_originale = (
-            immagine.size
+        original_width, original_height = (
+            image.size
         )
 
-        nuova_altezza = round(
-            nuova_larghezza
-            * altezza_originale
-            / larghezza_originale
+        new_height = round(
+            new_width
+            * original_height
+            / original_width
         )
 
-        aggiornamento_dimensioni = True
+        updating_dimensions = True
 
-        altezza_var.set(
-            str(nuova_altezza)
+        height_var.set(
+            str(new_height)
         )
 
-        aggiornamento_dimensioni = False
+        updating_dimensions = False
 
     except (
         ValueError,
         ZeroDivisionError
     ):
 
-        aggiornamento_dimensioni = False
+        updating_dimensions = False
 
-    aggiorna_preview_testuale()
+    update_text_preview()
 
 
 # ============================================================
-# MODIFICA ALTEZZA
+# MODIFY HEIGHT
 # ============================================================
 
-def modifica_altezza(event=None):
+def modify_height(event=None):
 
-    global aggiornamento_dimensioni
+    global updating_dimensions
 
-    if aggiornamento_dimensioni:
+    if updating_dimensions:
         return
 
-    if not mantieni_proporzioni.get():
-        aggiorna_preview_testuale()
+    if not keep_aspect_ratio.get():
+        update_text_preview()
         return
 
-    if immagine is None:
+    if image is None:
         return
 
     try:
 
-        nuova_altezza = int(
-            altezza_var.get()
+        new_height = int(
+            height_var.get()
         )
 
-        if nuova_altezza <= 0:
+        if new_height <= 0:
             return
 
-        larghezza_originale, altezza_originale = (
-            immagine.size
+        original_width, original_height = (
+            image.size
         )
 
-        nuova_larghezza = round(
-            nuova_altezza
-            * larghezza_originale
-            / altezza_originale
+        new_width = round(
+            new_height
+            * original_width
+            / original_height
         )
 
-        aggiornamento_dimensioni = True
+        updating_dimensions = True
 
-        larghezza_var.set(
-            str(nuova_larghezza)
+        width_var.set(
+            str(new_width)
         )
 
-        aggiornamento_dimensioni = False
+        updating_dimensions = False
 
     except (
         ValueError,
         ZeroDivisionError
     ):
 
-        aggiornamento_dimensioni = False
+        updating_dimensions = False
 
-    aggiorna_preview_testuale()
-
-
-# ============================================================
-# CAMBIO CHECKBOX
-# ============================================================
-
-def cambio_proporzioni():
-
-    aggiorna_preview_testuale()
+    update_text_preview()
 
 
 # ============================================================
-# CALCOLA DIMENSIONI
+# ASPECT RATIO CHECKBOX
 # ============================================================
 
-def calcola_dimensioni():
+def aspect_ratio_changed():
 
-    if immagine is None:
+    update_text_preview()
+
+
+# ============================================================
+# CALCULATE DIMENSIONS
+# ============================================================
+
+def calculate_dimensions():
+
+    if image is None:
 
         raise ValueError(
-            "Prima devi selezionare un'immagine."
+            "You must select an image first."
         )
 
-    larghezza_originale, altezza_originale = (
-        immagine.size
+    original_width, original_height = (
+        image.size
     )
 
     # ========================================================
-    # PIXEL
+    # PIXELS
     # ========================================================
 
-    if modalita.get() == "Pixel":
+    if resize_mode.get() == "Pixel":
 
         try:
 
-            larghezza = int(
-                larghezza_var.get()
+            width = int(
+                width_var.get()
             )
 
-            altezza = int(
-                altezza_var.get()
+            height = int(
+                height_var.get()
             )
 
         except ValueError:
 
             raise ValueError(
-                "Inserisci dimensioni valide."
+                "Enter valid dimensions."
             )
 
-        if larghezza <= 0 or altezza <= 0:
+        if width <= 0 or height <= 0:
 
             raise ValueError(
-                "Le dimensioni devono essere maggiori di 0."
+                "Dimensions must be greater than 0."
             )
 
-        return larghezza, altezza
+        return width, height
 
     # ========================================================
-    # PERCENTUALE
+    # PERCENTAGE
     # ========================================================
 
     try:
 
-        percentuale = float(
-            percentuale_var.get()
+        percentage = float(
+            percentage_var.get()
         )
 
     except ValueError:
 
         raise ValueError(
-            "Inserisci una percentuale valida."
+            "Enter a valid percentage."
         )
 
-    if percentuale <= 0:
+    if percentage <= 0:
 
         raise ValueError(
-            "La percentuale deve essere maggiore di 0."
+            "The percentage must be greater than 0."
         )
 
-    if direzione_var.get() == "Più piccola":
+    if direction_var.get() == "Smaller":
 
-        fattore = 1 - (
-            percentuale / 100
+        factor = 1 - (
+            percentage / 100
         )
 
     else:
 
-        fattore = 1 + (
-            percentuale / 100
+        factor = 1 + (
+            percentage / 100
         )
 
-    if fattore <= 0:
+    if factor <= 0:
 
         raise ValueError(
-            "La percentuale non è valida."
+            "The percentage is not valid."
         )
 
-    nuova_larghezza = round(
-        larghezza_originale * fattore
+    new_width = round(
+        original_width * factor
     )
 
-    nuova_altezza = round(
-        altezza_originale * fattore
+    new_height = round(
+        original_height * factor
     )
 
-    return nuova_larghezza, nuova_altezza
+    return new_width, new_height
 
 
 # ============================================================
-# PREVIEW TESTUALE
+# TEXT PREVIEW
 # ============================================================
 
-def aggiorna_preview_testuale(event=None):
+def update_text_preview(event=None):
 
-    if immagine is None:
+    if image is None:
 
-        risultato_label.config(
-            text="Nessuna immagine selezionata"
+        result_label.config(
+            text="No image selected"
         )
 
         return
 
     try:
 
-        larghezza, altezza = (
-            calcola_dimensioni()
+        width, height = (
+            calculate_dimensions()
         )
 
-        risultato_label.config(
+        result_label.config(
             text=(
-                f"Dimensione finale: "
-                f"{larghezza} × {altezza} px"
+                f"Final size: "
+                f"{width} × {height} px"
             )
         )
 
     except Exception:
 
-        risultato_label.config(
-            text="Dimensioni non valide"
+        result_label.config(
+            text="Invalid dimensions"
         )
 
 
 # ============================================================
-# RIDIMENSIONA E SALVA
+# RESIZE AND SAVE
 # ============================================================
 
-def ridimensiona():
+def resize_and_save():
 
-    if immagine is None:
+    if image is None:
 
         messagebox.showwarning(
-            "Nessuna immagine",
-            "Prima seleziona un'immagine."
+            "No image",
+            "Please select an image first."
         )
 
         return
 
     try:
 
-        nuova_larghezza, nuova_altezza = (
-            calcola_dimensioni()
+        new_width, new_height = (
+            calculate_dimensions()
         )
 
-        # L'originale NON viene modificata
-        nuova_immagine = immagine.resize(
+        # The original image is NOT modified
+        new_image = image.resize(
             (
-                nuova_larghezza,
-                nuova_altezza
+                new_width,
+                new_height
             ),
             Image.Resampling.LANCZOS
         )
 
         # ====================================================
-        # FORMATO
+        # FORMAT
         # ====================================================
 
-        formato = formato_var.get()
+        image_format = format_var.get()
 
-        if formato == "PNG":
+        if image_format == "PNG":
 
-            formato_pillow = "PNG"
-            estensione = ".png"
+            pillow_format = "PNG"
+            extension = ".png"
 
-        elif formato == "JPEG":
+        elif image_format == "JPEG":
 
-            formato_pillow = "JPEG"
-            estensione = ".jpg"
+            pillow_format = "JPEG"
+            extension = ".jpg"
 
-        elif formato == "WEBP":
+        elif image_format == "WEBP":
 
-            formato_pillow = "WEBP"
-            estensione = ".webp"
+            pillow_format = "WEBP"
+            extension = ".webp"
 
         else:
 
             raise ValueError(
-                "Formato non valido."
+                "Invalid format."
             )
 
         # ====================================================
-        # NOME
+        # NAME
         # ====================================================
 
-        nome_originale = os.path.splitext(
+        original_name = os.path.splitext(
             os.path.basename(
-                percorso_immagine
+                image_path
             )
         )[0]
 
-        nome_default = (
-            f"{nome_originale}_"
-            f"{nuova_larghezza}x"
-            f"{nuova_altezza}"
-            f"{estensione}"
+        default_name = (
+            f"{original_name}_"
+            f"{new_width}x"
+            f"{new_height}"
+            f"{extension}"
         )
 
-        percorso_salvataggio = (
+        save_path = (
             filedialog.asksaveasfilename(
-                title="Salva immagine",
-                initialfile=nome_default,
-                defaultextension=estensione,
+                title="Save image",
+                initialfile=default_name,
+                defaultextension=extension,
                 filetypes=[
                     (
                         "PNG",
@@ -676,76 +675,76 @@ def ridimensiona():
             )
         )
 
-        if not percorso_salvataggio:
+        if not save_path:
             return
 
-        # JPEG non supporta trasparenza
+        # JPEG does not support transparency
         if (
-            formato_pillow == "JPEG"
-            and nuova_immagine.mode
+            pillow_format == "JPEG"
+            and new_image.mode
             in ("RGBA", "LA", "P")
         ):
 
-            nuova_immagine = (
-                nuova_immagine.convert("RGB")
+            new_image = (
+                new_image.convert("RGB")
             )
 
-        nuova_immagine.save(
-            percorso_salvataggio,
-            format=formato_pillow
+        new_image.save(
+            save_path,
+            format=pillow_format
         )
 
         messagebox.showinfo(
-            "Operazione completata",
+            "Operation completed",
             (
-                "Immagine salvata correttamente!\n\n"
-                f"Formato: {formato}\n"
-                f"Dimensioni: "
-                f"{nuova_larghezza} × "
-                f"{nuova_altezza} px"
+                "Image saved successfully!\n\n"
+                f"Format: {image_format}\n"
+                f"Dimensions: "
+                f"{new_width} × "
+                f"{new_height} px"
             )
         )
 
-    except ValueError as errore:
+    except ValueError as error:
 
         messagebox.showerror(
-            "Errore",
-            str(errore)
+            "Error",
+            str(error)
         )
 
-    except Exception as errore:
+    except Exception as error:
 
         messagebox.showerror(
-            "Errore",
+            "Error",
             (
-                "Si è verificato un errore:\n\n"
-                f"{errore}"
+                "An error occurred:\n\n"
+                f"{error}"
             )
         )
 
 
 # ============================================================
-# TITOLO
+# TITLE
 # ============================================================
 
-titolo = tk.Label(
-    finestra,
+title_label = tk.Label(
+    window,
     text="ImageResizer",
     font=("Segoe UI", 24, "bold")
 )
 
-titolo.pack(
+title_label.pack(
     pady=(15, 2)
 )
 
 
-sottotitolo = tk.Label(
-    finestra,
-    text="Ridimensiona le tue immagini facilmente",
+subtitle_label = tk.Label(
+    window,
+    text="Resize your images easily",
     font=("Segoe UI", 10)
 )
 
-sottotitolo.pack(
+subtitle_label.pack(
     pady=(0, 8)
 )
 
@@ -755,8 +754,8 @@ sottotitolo.pack(
 # ============================================================
 
 preview_frame = ttk.LabelFrame(
-    finestra,
-    text="Anteprima"
+    window,
+    text="Preview"
 )
 
 preview_frame.pack(
@@ -767,7 +766,7 @@ preview_frame.pack(
 )
 
 
-# Area preview
+# Preview area
 preview_area = tk.Frame(
     preview_frame,
     bg="#202020"
@@ -783,7 +782,7 @@ preview_area.pack(
 
 preview_label = tk.Label(
     preview_area,
-    text="Nessuna immagine",
+    text="No image",
     bg="#202020",
     fg="white",
     font=("Segoe UI", 11)
@@ -796,7 +795,7 @@ preview_label.place(
 )
 
 
-# Aggiorna la preview quando ridimensioniamo la finestra
+# Update preview when resizing the window
 preview_area.bind(
     "<Configure>",
     preview_resize
@@ -804,89 +803,89 @@ preview_area.bind(
 
 
 # ============================================================
-# SELEZIONE IMMAGINE
+# IMAGE SELECTION
 # ============================================================
 
-seleziona_button = ttk.Button(
-    finestra,
-    text="📁  Seleziona immagine",
-    command=scegli_immagine
+select_button = ttk.Button(
+    window,
+    text="📁  Select image",
+    command=select_image
 )
 
-seleziona_button.pack(
+select_button.pack(
     pady=5
 )
 
 
-nome_label = tk.Label(
-    finestra,
-    text="Nessuna immagine selezionata",
+name_label = tk.Label(
+    window,
+    text="No image selected",
     font=("Segoe UI", 10)
 )
 
-nome_label.pack(
+name_label.pack(
     pady=(3, 0)
 )
 
 
-dimensioni_label = tk.Label(
-    finestra,
+dimensions_label = tk.Label(
+    window,
     text="",
     font=("Segoe UI", 10)
 )
 
-dimensioni_label.pack()
+dimensions_label.pack()
 
 
 # ============================================================
-# MODALITÀ
+# RESIZE MODE
 # ============================================================
 
-frame_modalita = ttk.LabelFrame(
-    finestra,
-    text="Ridimensionamento"
+mode_frame = ttk.LabelFrame(
+    window,
+    text="Resize"
 )
 
-frame_modalita.pack(
+mode_frame.pack(
     fill="x",
     padx=35,
     pady=8
 )
 
 
-modalita_menu = ttk.Combobox(
-    frame_modalita,
-    textvariable=modalita,
+mode_menu = ttk.Combobox(
+    mode_frame,
+    textvariable=resize_mode,
     values=[
         "Pixel",
-        "Percentuale"
+        "Percentage"
     ],
     state="readonly",
     width=20
 )
 
-modalita_menu.pack(
+mode_menu.pack(
     padx=10,
     pady=7
 )
 
-modalita_menu.bind(
+mode_menu.bind(
     "<<ComboboxSelected>>",
-    cambia_modalita
+    change_resize_mode
 )
 
 
 # ============================================================
-# PIXEL
+# PIXELS
 # ============================================================
 
-frame_pixel = ttk.Frame(
-    finestra
+pixel_frame = ttk.Frame(
+    window
 )
 
 
 preset_label = tk.Label(
-    frame_pixel,
+    pixel_frame,
     text="Preset:"
 )
 
@@ -900,9 +899,9 @@ preset_label.grid(
 
 
 preset_menu = ttk.Combobox(
-    frame_pixel,
-    textvariable=preset_selezionato,
-    values=list(PRESET.keys()),
+    pixel_frame,
+    textvariable=selected_preset,
+    values=list(PRESETS.keys()),
     state="readonly",
     width=27
 )
@@ -916,16 +915,16 @@ preset_menu.grid(
 
 preset_menu.bind(
     "<<ComboboxSelected>>",
-    preset_cambiato
+    preset_changed
 )
 
 
-larghezza_label = tk.Label(
-    frame_pixel,
-    text="Larghezza:"
+width_label = tk.Label(
+    pixel_frame,
+    text="Width:"
 )
 
-larghezza_label.grid(
+width_label.grid(
     row=1,
     column=0,
     padx=5,
@@ -934,13 +933,13 @@ larghezza_label.grid(
 )
 
 
-larghezza_entry = ttk.Entry(
-    frame_pixel,
-    textvariable=larghezza_var,
+width_entry = ttk.Entry(
+    pixel_frame,
+    textvariable=width_var,
     width=15
 )
 
-larghezza_entry.grid(
+width_entry.grid(
     row=1,
     column=1,
     padx=5,
@@ -949,12 +948,12 @@ larghezza_entry.grid(
 )
 
 
-altezza_label = tk.Label(
-    frame_pixel,
-    text="Altezza:"
+height_label = tk.Label(
+    pixel_frame,
+    text="Height:"
 )
 
-altezza_label.grid(
+height_label.grid(
     row=2,
     column=0,
     padx=5,
@@ -963,13 +962,13 @@ altezza_label.grid(
 )
 
 
-altezza_entry = ttk.Entry(
-    frame_pixel,
-    textvariable=altezza_var,
+height_entry = ttk.Entry(
+    pixel_frame,
+    textvariable=height_var,
     width=15
 )
 
-altezza_entry.grid(
+height_entry.grid(
     row=2,
     column=1,
     padx=5,
@@ -978,14 +977,14 @@ altezza_entry.grid(
 )
 
 
-proporzioni_check = ttk.Checkbutton(
-    frame_pixel,
-    text="Mantieni proporzioni",
-    variable=mantieni_proporzioni,
-    command=cambio_proporzioni
+aspect_ratio_check = ttk.Checkbutton(
+    pixel_frame,
+    text="Keep aspect ratio",
+    variable=keep_aspect_ratio,
+    command=aspect_ratio_changed
 )
 
-proporzioni_check.grid(
+aspect_ratio_check.grid(
     row=3,
     column=0,
     columnspan=2,
@@ -995,33 +994,33 @@ proporzioni_check.grid(
 )
 
 
-# Aggiornamento quando si finisce di modificare
-larghezza_entry.bind(
+# Update while editing
+width_entry.bind(
     "<KeyRelease>",
-    modifica_larghezza
+    modify_width
 )
 
-altezza_entry.bind(
+height_entry.bind(
     "<KeyRelease>",
-    modifica_altezza
+    modify_height
 )
 
 
 # ============================================================
-# PERCENTUALE
+# PERCENTAGE
 # ============================================================
 
-frame_percentuale = ttk.Frame(
-    finestra
+percentage_frame = ttk.Frame(
+    window
 )
 
 
-direzione_label = tk.Label(
-    frame_percentuale,
-    text="Ridimensiona:"
+direction_label = tk.Label(
+    percentage_frame,
+    text="Resize:"
 )
 
-direzione_label.grid(
+direction_label.grid(
     row=0,
     column=0,
     padx=5,
@@ -1030,36 +1029,36 @@ direzione_label.grid(
 )
 
 
-direzione_menu = ttk.Combobox(
-    frame_percentuale,
-    textvariable=direzione_var,
+direction_menu = ttk.Combobox(
+    percentage_frame,
+    textvariable=direction_var,
     values=[
-        "Più piccola",
-        "Più grande"
+        "Smaller",
+        "Larger"
     ],
     state="readonly",
     width=18
 )
 
-direzione_menu.grid(
+direction_menu.grid(
     row=0,
     column=1,
     padx=5,
     pady=3
 )
 
-direzione_menu.bind(
+direction_menu.bind(
     "<<ComboboxSelected>>",
-    aggiorna_preview_testuale
+    update_text_preview
 )
 
 
-percentuale_label = tk.Label(
-    frame_percentuale,
-    text="Percentuale:"
+percentage_label = tk.Label(
+    percentage_frame,
+    text="Percentage:"
 )
 
-percentuale_label.grid(
+percentage_label.grid(
     row=1,
     column=0,
     padx=5,
@@ -1068,44 +1067,44 @@ percentuale_label.grid(
 )
 
 
-percentuale_entry = ttk.Entry(
-    frame_percentuale,
-    textvariable=percentuale_var,
+percentage_entry = ttk.Entry(
+    percentage_frame,
+    textvariable=percentage_var,
     width=15
 )
 
-percentuale_entry.grid(
+percentage_entry.grid(
     row=1,
     column=1,
     padx=5,
     pady=3
 )
 
-percentuale_entry.bind(
+percentage_entry.bind(
     "<KeyRelease>",
-    aggiorna_preview_testuale
+    update_text_preview
 )
 
 
 # ============================================================
-# FORMATO
+# OUTPUT FORMAT
 # ============================================================
 
-frame_formato = ttk.LabelFrame(
-    finestra,
-    text="Formato di output"
+format_frame = ttk.LabelFrame(
+    window,
+    text="Output format"
 )
 
-frame_formato.pack(
+format_frame.pack(
     fill="x",
     padx=35,
     pady=8
 )
 
 
-formato_menu = ttk.Combobox(
-    frame_formato,
-    textvariable=formato_var,
+format_menu = ttk.Combobox(
+    format_frame,
+    textvariable=format_var,
     values=[
         "PNG",
         "JPEG",
@@ -1115,38 +1114,38 @@ formato_menu = ttk.Combobox(
     width=15
 )
 
-formato_menu.pack(
+format_menu.pack(
     padx=10,
     pady=6
 )
 
 
 # ============================================================
-# RISULTATO
+# RESULT
 # ============================================================
 
-risultato_label = tk.Label(
-    finestra,
-    text="Nessuna immagine selezionata",
+result_label = tk.Label(
+    window,
+    text="No image selected",
     font=("Segoe UI", 11, "bold")
 )
 
-risultato_label.pack(
+result_label.pack(
     pady=5
 )
 
 
 # ============================================================
-# PULSANTE
+# BUTTON
 # ============================================================
 
-ridimensiona_button = ttk.Button(
-    finestra,
-    text="🔄  RIDIMENSIONA E SALVA",
-    command=ridimensiona
+resize_button = ttk.Button(
+    window,
+    text="🔄  RESIZE AND SAVE",
+    command=resize_and_save
 )
 
-ridimensiona_button.pack(
+resize_button.pack(
     ipadx=15,
     ipady=7,
     pady=(2, 10)
@@ -1154,9 +1153,10 @@ ridimensiona_button.pack(
 
 
 # ============================================================
-# AVVIO
+# START
 # ============================================================
 
-cambia_modalita()
+change_resize_mode()
 
-finestra.mainloop()
+window.mainloop()
+
